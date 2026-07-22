@@ -1,6 +1,8 @@
+import { useNavigate } from "react-router-dom";
 import StudentTable from "../components/StudentTable";
 
-const Students = ({ onNavigate }) => {
+const Students = () => {
+  const navigate = useNavigate();
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
       <div className="mx-auto max-w-7xl">
@@ -17,7 +19,7 @@ const Students = ({ onNavigate }) => {
           </div>
 
           <button
-              onClick={() => onNavigate('AddStudent')}
+              onClick={() => navigate('/add-student')}
               className="rounded-xl bg-blue-600 px-5 py-2.5 text-white"
             >
               + Add Student

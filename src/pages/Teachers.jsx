@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { useNavigate } from "react-router-dom"
 import { Eye, Pencil, Trash2 } from "lucide-react"
 
 const initialTeachers = [
@@ -28,7 +29,8 @@ const initialTeachers = [
   },
 ]
 
-const Teachers = ({ onNavigate }) => {
+const Teachers = () => {
+  const navigate = useNavigate()
   const [teachers, setTeachers] = useState(initialTeachers)
   const [selectedTeacher, setSelectedTeacher] = useState(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -95,7 +97,7 @@ const Teachers = ({ onNavigate }) => {
           </div>
 
           <button
-              onClick={() => onNavigate("AddTeacher")}
+              onClick={() => navigate("/add-teacher")}
               className="rounded-xl bg-blue-600 px-5 py-2.5 text-white shadow-md hover:bg-blue-700"
             >
               + Add Teacher

@@ -1,3 +1,5 @@
+import { useNavigate } from "react-router-dom";
+
 const navItems = [
   'Dashboard',
   'Students',
@@ -10,7 +12,24 @@ const navItems = [
   'Settings',
 ]
 
-const Sidebar = ({ activePage, onNavigate }) => {
+const Sidebar = ({ activePage }) => {
+  const navigate = useNavigate();
+
+  const pathMap = {
+    'Dashboard': '/dashboard',
+    'Students': '/students',
+    'Class': '/class',
+    'Attendance': '/attendance',
+    'Scores': '/scores',
+    'Teachers': '/teachers',
+    'Reports': '/reports',
+    'Settings': '/settings',
+  };
+
+  const handleNavigate = (item) => {
+    navigate(pathMap[item]);
+  };
+
   return (
     <aside className="sidebar">
       <div className="sidebar__brand">Technology School</div>
@@ -19,7 +38,7 @@ const Sidebar = ({ activePage, onNavigate }) => {
           <button
             className={activePage === item ? 'sidebar__link is-active' : 'sidebar__link'}
             key={item}
-            onClick={() => onNavigate(item)}
+            onClick={() => handleNavigate(item)}
             type="button"
           >
             {item}

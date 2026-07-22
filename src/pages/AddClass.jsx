@@ -1,6 +1,8 @@
 import { useState } from "react"
+import { useNavigate } from "react-router-dom"
 
 const AddClass = () => {
+  const navigate = useNavigate()
   const [form, setForm] = useState({
     name: "",
     teacher: "",
@@ -17,6 +19,7 @@ const AddClass = () => {
     e.preventDefault()
     console.log("New Class:", form)
     alert("Class added successfully!")
+    navigate('/class')
   }
 
   return (

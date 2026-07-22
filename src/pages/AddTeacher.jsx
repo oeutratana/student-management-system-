@@ -1,6 +1,8 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const AddTeacher = () => {
+  const navigate = useNavigate();
   const [name, setName] = useState("");
   const [subject, setSubject] = useState("");
   const [classes, setClasses] = useState("");
@@ -25,6 +27,7 @@ const AddTeacher = () => {
       return;
     }
     console.log({ name, subject, classes, imageUrl, status });
+    navigate('/teachers');
   };
 
   return (

@@ -1,11 +1,14 @@
-const AddStudent = ({ onNavigate }) => {
+import { useNavigate } from "react-router-dom";
+
+const AddStudent = () => {
+  const navigate = useNavigate();
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
       <div className="mx-auto max-w-7xl">
         <div className="rounded-2xl bg-white p-6 shadow-lg">
           
             <button
-              onClick={() => onNavigate('Students')}
+              onClick={() => navigate('/students')}
               className="rounded-xl border px-4 py-2 text-gray-700 hover:bg-gray-100"
               type="button"
             >
