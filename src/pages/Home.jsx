@@ -40,7 +40,7 @@ const Home = () => {
           onClick={() => navigate("/")}
           type="button"
         >
-          <span className="grid h-11 w-11 place-items-center rounded-xl bg-blue-600 text-white">
+          <span className="grid h-11 w-11 place-items-center rounded-xl bg-gradient-to-br from-indigo-600 to-violet-600 text-white shadow-lg shadow-indigo-600/25">
             <GraduationCap size={24} />
           </span>
           <span>
@@ -56,7 +56,7 @@ const Home = () => {
         </nav>
 
         <button
-          className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 font-semibold text-white shadow-md hover:bg-blue-700"
+          className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 px-5 py-2.5 font-semibold text-white shadow-lg shadow-indigo-600/25 transition-transform hover:-translate-y-0.5"
           onClick={() => navigate("/dashboard")}
           type="button"
         >
@@ -67,11 +67,11 @@ const Home = () => {
 
       <section className="mx-auto grid max-w-7xl items-center gap-10 px-6 py-12 lg:grid-cols-[1.05fr_0.95fr] lg:py-16">
         <div>
-          <p className="mb-4 inline-flex items-center gap-2 rounded-full bg-blue-50 px-4 py-2 text-sm font-bold text-blue-700">
+          <p className="mb-4 inline-flex items-center gap-2 rounded-full bg-indigo-50 px-4 py-2 text-sm font-bold text-indigo-700">
             <ShieldCheck size={16} />
             Smart school administration
           </p>
-          <h1 className="max-w-3xl text-4xl font-extrabold leading-tight text-slate-900 md:text-6xl">
+          <h1 className="max-w-3xl text-4xl font-extrabold leading-tight tracking-tight text-slate-900 md:text-6xl">
             Manage students, classes and attendance with clarity.
           </h1>
           <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-600">
@@ -81,7 +81,7 @@ const Home = () => {
 
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <button
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-6 py-3 font-semibold text-white shadow-lg hover:bg-blue-700"
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 px-6 py-3 font-semibold text-white shadow-lg shadow-indigo-600/25 transition-transform hover:-translate-y-0.5"
               onClick={() => navigate("/dashboard")}
               type="button"
             >
@@ -89,8 +89,8 @@ const Home = () => {
               <LayoutDashboard size={18} />
             </button>
             <button
-              className="rounded-xl border border-slate-200 bg-white px-6 py-3 font-semibold text-slate-700 hover:bg-slate-50"
-              onClick={() => navigate("/attendance")}
+              className="rounded-xl border border-slate-200 bg-white px-6 py-3 font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+              onClick={() => navigate("/attendances")}
               type="button"
             >
               View Attendance
@@ -109,7 +109,7 @@ const Home = () => {
 
         <div className="relative">
           <div className="rounded-3xl bg-white p-6 shadow-[0_24px_80px_-40px_rgba(15,23,42,0.45)]">
-            <div className="rounded-2xl bg-gradient-to-br from-blue-50 via-white to-green-50 p-6">
+            <div className="rounded-2xl bg-gradient-to-br from-indigo-50 via-white to-emerald-50 p-6">
               <img
                 alt="Technology school platform preview"
                 className="mx-auto h-60 w-full object-contain"
@@ -140,8 +140,11 @@ const Home = () => {
             const Icon = feature.icon;
 
             return (
-              <article className="rounded-2xl bg-white p-6 shadow-md" key={feature.title}>
-                <span className="grid h-12 w-12 place-items-center rounded-xl bg-blue-50 text-blue-600">
+              <article
+                className="rounded-2xl border border-slate-200/70 bg-white p-6 shadow-[0_10px_40px_-30px_rgba(15,23,42,0.3)] transition-shadow hover:shadow-[0_16px_50px_-30px_rgba(15,23,42,0.4)]"
+                key={feature.title}
+              >
+                <span className="grid h-12 w-12 place-items-center rounded-xl bg-indigo-50 text-indigo-600">
                   <Icon size={24} />
                 </span>
                 <h2 className="mt-5 text-xl font-bold">{feature.title}</h2>

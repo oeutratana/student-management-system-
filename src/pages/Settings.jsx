@@ -1,3 +1,5 @@
+import { Save } from "lucide-react"
+
 const Settings = () => {
   return (
     <div className="page-stack">
@@ -6,7 +8,10 @@ const Settings = () => {
           <h2>Settings</h2>
           <p>Update school profile, academic year, and account preferences.</p>
         </div>
-        <button className="primary-button" type="button">Save Changes</button>
+        <button className="primary-button icon-button" type="button">
+          <Save size={18} />
+          Save Changes
+        </button>
       </div>
 
       <div className="settings-grid">

@@ -1,245 +1,328 @@
+import { useEffect, useState } from "react";
 import {
-  Bell,
-  Mail,
-  Search,
-  School,
-  Users,
-  Settings,
-  BookOpen,
+  ArrowRight,
+  CalendarDays,
+  ChevronLeft,
+  ChevronRight,
+  CircleDollarSign,
   ClipboardCheck,
+  Download,
+  Megaphone,
+  School,
+  TrendingUp,
+  Trophy,
   UserCircle,
+  Users,
 } from "lucide-react";
+import { dashboardApi } from "../services/schoolApi";
 
-const stats = [
+const statMeta = [
   {
-    title: "Schools",
-    value: "6000",
-    color: "border-pink-400",
-    icon: <School className="text-pink-400" />,
-  },
-  {
+    key: "students",
     title: "Students",
-    value: "24542",
-    color: "border-purple-500",
-    icon: <Users className="text-purple-500" />,
+    value: "text-indigo-600 bg-indigo-50",
+    icon: <Users size={22} />,
+    trend: "+12%",
   },
   {
+    key: "teachers",
     title: "Teachers",
-    value: "5000",
-    color: "border-yellow-400",
-    icon: <ClipboardCheck className="text-yellow-400" />,
+    value: "text-amber-500 bg-amber-50",
+    icon: <ClipboardCheck size={22} />,
+    trend: "+4%",
   },
   {
+    key: "parents",
     title: "Parents",
-    value: "10000",
-    color: "border-green-500",
-    icon: <UserCircle className="text-green-500" />,
+    value: "text-emerald-600 bg-emerald-50",
+    icon: <UserCircle size={22} />,
+    trend: "+8%",
+  },
+  {
+    key: "departments",
+    title: "Departments",
+    value: "text-pink-500 bg-pink-50",
+    icon: <School size={22} />,
+    trend: "2 new",
   },
 ];
 
-const menu = [
-  "Dashboard",
-  "Students",
-  "Teachers",
-  "Parents",
-  "Library",
-  "Attendance",
-  "Exam",
-  "Hostel",
-  "Account",
-  "Settings",
+const performanceData = [
+  { label: "G10", value: 86 },
+  { label: "G11", value: 68 },
+  { label: "G12", value: 92 },
+  { label: "G9", value: 74 },
+  { label: "G8", value: 58 },
+];
+
+const topScorers = [
+  { name: "Branden Harris", score: "99.90%", rank: "1st", bg: "from-emerald-500 to-green-400" },
+  { name: "Charles James", score: "99.76%", rank: "2nd", bg: "from-indigo-500 to-violet-500" },
+  { name: "Mike Peter", score: "99.50%", rank: "3rd", bg: "from-amber-500 to-yellow-400" },
+];
+
+const feesData = [
+  { label: "Tuition", value: 78, color: "bg-indigo-500" },
+  { label: "Library", value: 54, color: "bg-amber-400" },
+  { label: "Activities", value: 90, color: "bg-emerald-500" },
 ];
 
 export default function Dashboard() {
+  const [stats, setStats] = useState({
+    students: "-",
+    teachers: "-",
+    parents: "-",
+    departments: "-",
+  });
+  const [announcements, setAnnouncements] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    dashboardApi
+      .index()
+      .then((data) => {
+        setStats({
+          students: data?.counts?.students ?? data?.students ?? "-",
+          teachers: data?.counts?.teachers ?? data?.teachers ?? "-",
+          parents: data?.counts?.parents ?? data?.parents ?? "-",
+          departments: data?.counts?.departments ?? data?.departments ?? "-",
+        });
+        setAnnouncements(data?.announcements ?? []);
+      })
+      .catch((err) => setError(err.message))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const today = new Date();
+  const dateLabel = today.toLocaleDateString("en-US", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+  const hour = today.getHours();
+  const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
+
   return (
-    <div className="min-h-screen bg-[#f5f4fa] flex">
-      {/* Main Content */}
-      <main className="flex-1 p-4">
-        {/* Stats */}
-        <div className="grid grid-cols-4 gap-5 mt-4">
-          {stats.map((stat) => (
-            <div
-              key={stat.title}
-              className={`bg-white rounded-3xl p-6 border-l-4 ${stat.color} shadow-[0_18px_60px_-30px_rgba(15,23,42,0.35)]`}
-            >
-              <div className="flex items-center gap-4">
-                <div className="h-12 w-12 rounded-2xl bg-slate-50 grid place-items-center">
-                  {stat.icon}
-                </div>
-                <div>
-                  <p className="text-gray-500 text-sm">{stat.title}</p>
-                  <h3 className="text-3xl font-bold">{stat.value}</h3>
-                </div>
+    <div className="flex flex-col gap-6">
+      {error && <div className="alert">{error}</div>}
+
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <p className="text-sm font-semibold text-slate-500">{dateLabel}</p>
+          <h1 className="mt-1 text-2xl font-extrabold tracking-tight text-slate-900">
+            {greeting}, Admin 👋
+          </h1>
+        </div>
+        <button className="primary-button icon-button" type="button">
+          <Download size={18} />
+          Export Report
+        </button>
+      </div>
+
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
+        {statMeta.map((stat) => (
+          <div
+            key={stat.key}
+            className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-[0_1px_2px_rgba(16,24,40,0.04),0_10px_30px_-18px_rgba(16,24,40,0.2)]"
+          >
+            <div className="flex items-start justify-between">
+              <div className={`grid h-12 w-12 place-items-center rounded-xl ${stat.value}`}>
+                {stat.icon}
+              </div>
+              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-600">
+                <TrendingUp size={13} />
+                {stat.trend}
+              </span>
+            </div>
+            <p className="mt-4 text-sm font-semibold text-slate-500">{stat.title}</p>
+            <p className="mt-1 text-3xl font-extrabold tracking-tight text-slate-900">
+              {loading ? "..." : stats[stat.key]}
+            </p>
+          </div>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-12 gap-6">
+        <div className="col-span-12 space-y-6 xl:col-span-7">
+          <section className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
+            <div className="mb-6 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <span className="grid h-10 w-10 place-items-center rounded-xl bg-indigo-50 text-indigo-600">
+                  <CalendarDays size={20} />
+                </span>
+                <h2 className="text-lg font-bold text-slate-900">Calendar & Attendance</h2>
+              </div>
+              <div className="flex items-center gap-2">
+                <button className="icon-only" title="Previous month" type="button">
+                  <ChevronLeft size={16} />
+                </button>
+                <span className="min-w-28 text-center text-sm font-bold text-slate-600">
+                  {today.toLocaleDateString("en-US", { month: "long", year: "numeric" })}
+                </span>
+                <button className="icon-only" title="Next month" type="button">
+                  <ChevronRight size={16} />
+                </button>
               </div>
             </div>
-          ))}
-        </div>
 
-        {/* Content Grid */}
-        <div className="grid grid-cols-12 gap-6 mt-6">
-          {/* Left Side */}
-          <div className="col-span-7 space-y-6">
-            {/* Calendar */}
-            <div className="bg-white rounded-2xl p-6 shadow-sm">
-              <div className="flex justify-between mb-6">
-                <h2 className="font-semibold">
-                  Calendar & Attendance
-                </h2>
-                <span className="text-gray-500">
-                  02 October, 2019
-                </span>
-              </div>
+            <div className="grid grid-cols-7 gap-2 text-center">
+              {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
+                <div key={day} className="py-2 text-xs font-bold uppercase tracking-wide text-slate-400">
+                  {day}
+                </div>
+              ))}
 
-              <div className="grid grid-cols-7 gap-3 text-center">
-                {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(
-                  (day) => (
-                    <div
-                      key={day}
-                      className="font-medium text-gray-500"
-                    >
-                      {day}
-                    </div>
-                  )
-                )}
-
-                {Array.from({ length: 35 }).map((_, i) => (
+              {Array.from({ length: 35 }).map((_, i) => {
+                const isToday = i === 15;
+                const hasMark = [10, 24].includes(i);
+                const holiday = i >= 30 && i <= 32;
+                return (
                   <div
                     key={i}
-                    className={`h-10 flex items-center justify-center rounded-full ${
-                      i === 10
-                        ? "bg-green-500 text-white"
-                        : i === 24
-                        ? "bg-yellow-400 text-white"
-                        : i >= 30 && i <= 32
-                        ? "bg-green-400 text-white"
-                        : ""
+                    className={`relative grid h-11 place-items-center rounded-xl text-sm font-semibold transition-colors ${
+                      isToday
+                        ? "bg-indigo-600 text-white shadow-lg shadow-indigo-600/30"
+                        : holiday
+                          ? "bg-emerald-50 text-emerald-600"
+                          : hasMark
+                            ? "bg-amber-50 text-amber-600"
+                            : "text-slate-600 hover:bg-slate-100"
                     }`}
+                    title={holiday ? "Attendance day" : hasMark ? "Event day" : undefined}
                   >
                     {i + 1}
                   </div>
-                ))}
+                );
+              })}
+            </div>
+          </section>
+
+          <section className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
+            <div className="mb-6 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <span className="grid h-10 w-10 place-items-center rounded-xl bg-emerald-50 text-emerald-600">
+                  <Megaphone size={20} />
+                </span>
+                <h2 className="text-lg font-bold text-slate-900">Activities & Announcements</h2>
               </div>
+              <button className="secondary-button" type="button">
+                View All
+                <ArrowRight size={16} />
+              </button>
             </div>
 
-            {/* Notifications */}
-            <div className="bg-white rounded-2xl p-6 shadow-sm">
-              <div className="flex justify-between">
-                <h2 className="font-semibold">
-                  Activities Notification
-                </h2>
-
-                <button className="border border-green-500 text-green-500 px-4 py-1 rounded-full text-sm">
-                  View All
-                </button>
-              </div>
-
-              <div className="mt-6 space-y-6">
-                {[1, 2].map((item) => (
+            <div className="space-y-4">
+              {loading ? (
+                <p className="py-6 text-sm text-slate-400">Loading announcements...</p>
+              ) : announcements.length ? (
+                announcements.map((item) => (
                   <div
-                    key={item}
-                    className="border-b pb-4 last:border-none"
+                    key={item.id}
+                    className="flex items-start gap-4 rounded-xl border border-slate-100 bg-slate-50/60 p-4 transition-colors hover:border-indigo-200 hover:bg-white"
                   >
-                    <h3 className="font-medium">
-                      St.Xavier School
-                    </h3>
-                    <p className="text-sm text-gray-400">
-                      02 Oct, 2019
-                    </p>
-
-                    <p className="text-gray-500 text-sm mt-2">
-                      We are planning to celebrate Gandhi
-                      Jayanti in our school. Parents and
-                      teachers are invited.
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Right Side */}
-          <div className="col-span-5 space-y-6">
-            {/* School Performance */}
-            <div className="bg-white rounded-2xl p-6 shadow-sm">
-              <h2 className="font-semibold mb-4">
-                School Performance
-              </h2>
-
-              <div className="flex justify-center items-end gap-10 h-56">
-                <div className="w-12 h-40 bg-purple-500 rounded-t-lg"></div>
-                <div className="w-12 h-28 bg-yellow-400 rounded-t-lg"></div>
-                <div className="w-12 h-36 bg-green-500 rounded-t-lg"></div>
-              </div>
-            </div>
-
-            {/* Top Scorer */}
-            <div className="bg-white rounded-2xl p-6 shadow-sm">
-              <div className="flex justify-between mb-5">
-                <h2 className="font-semibold">Top Scorer</h2>
-
-                <select className="border rounded-lg px-3 py-1">
-                  <option>2018-2019</option>
-                </select>
-              </div>
-
-              <div className="grid grid-cols-3 gap-4">
-                {[
-                  {
-                    name: "Branden Harris",
-                    score: "99.90%",
-                    bg: "bg-green-500",
-                    rank: "1st",
-                  },
-                  {
-                    name: "Charles James",
-                    score: "99.76%",
-                    bg: "bg-purple-500",
-                    rank: "2nd",
-                  },
-                  {
-                    name: "Mike Peter",
-                    score: "99.50%",
-                    bg: "bg-yellow-400",
-                    rank: "3rd",
-                  },
-                ].map((student) => (
-                  <div
-                    key={student.name}
-                    className={`${student.bg} text-white rounded-xl p-4 text-center`}
-                  >
-                    <UserCircle
-                      size={48}
-                      className="mx-auto mb-3"
-                    />
-                    <h4 className="text-sm font-medium">
-                      {student.name}
-                    </h4>
-                    <div className="text-3xl font-bold my-3">
-                      {student.score}
-                    </div>
-                    <div className="bg-white/20 rounded-lg py-2">
-                      {student.rank}
+                    <span className="grid h-10 w-10 flex-none place-items-center rounded-xl bg-indigo-50 text-indigo-600">
+                      <Megaphone size={18} />
+                    </span>
+                    <div className="min-w-0">
+                      <h3 className="font-bold text-slate-900">{item.title}</h3>
+                      <p className="mt-0.5 text-xs font-semibold text-slate-400">
+                        {item.publish_date ?? "Latest"}
+                      </p>
+                      <p className="mt-2 text-sm leading-6 text-slate-500">
+                        {item.content ?? item.body ?? ""}
+                      </p>
                     </div>
                   </div>
-                ))}
-              </div>
+                ))
+              ) : (
+                <p className="py-6 text-sm text-slate-400">No announcements yet.</p>
+              )}
             </div>
-
-            {/* Fees Structure */}
-            <div className="bg-white rounded-2xl p-6 shadow-sm">
-              <h2 className="font-semibold mb-4">
-                Schools Fees Structure
-              </h2>
-
-              <div className="h-48 flex items-end gap-5 justify-center">
-                <div className="w-10 bg-purple-500 h-36 rounded-t"></div>
-                <div className="w-10 bg-yellow-400 h-24 rounded-t"></div>
-                <div className="w-10 bg-green-500 h-40 rounded-t"></div>
-              </div>
-            </div>
-          </div>
+          </section>
         </div>
-      </main>
+
+        <div className="col-span-12 space-y-6 xl:col-span-5">
+          <section className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
+            <div className="mb-6 flex items-center gap-3">
+              <span className="grid h-10 w-10 place-items-center rounded-xl bg-violet-50 text-violet-600">
+                <TrendingUp size={20} />
+              </span>
+              <h2 className="text-lg font-bold text-slate-900">School Performance</h2>
+            </div>
+
+            <div className="flex items-end justify-between gap-4 border-b border-slate-100 pb-2">
+              <div className="flex h-56 flex-1 items-end justify-around gap-4">
+                {performanceData.map((bar) => (
+                  <div key={bar.label} className="flex h-full flex-1 flex-col items-center justify-end gap-2">
+                    <div
+                      className="w-full rounded-t-xl bg-gradient-to-t from-indigo-600 to-violet-400 transition-all hover:from-indigo-700 hover:to-violet-500"
+                      style={{ height: `${bar.value}%` }}
+                      title={`${bar.label}: ${bar.value}%`}
+                    />
+                    <span className="text-xs font-bold text-slate-400">{bar.label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="mt-4 flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3">
+              <span className="text-sm font-semibold text-slate-500">Average score</span>
+              <span className="text-lg font-extrabold text-indigo-600">82.4%</span>
+            </div>
+          </section>
+
+          <section className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
+            <div className="mb-6 flex items-center gap-3">
+              <span className="grid h-10 w-10 place-items-center rounded-xl bg-amber-50 text-amber-500">
+                <Trophy size={20} />
+              </span>
+              <h2 className="text-lg font-bold text-slate-900">Top Scorers</h2>
+            </div>
+
+            <div className="grid grid-cols-3 gap-3">
+              {topScorers.map((student) => (
+                <div
+                  key={student.name}
+                  className={`rounded-2xl bg-gradient-to-br ${student.bg} p-4 text-center text-white shadow-lg`}
+                >
+                  <UserCircle size={40} className="mx-auto mb-2 opacity-90" />
+                  <h4 className="truncate text-xs font-bold">{student.name}</h4>
+                  <div className="my-2 text-2xl font-extrabold">{student.score}</div>
+                  <div className="rounded-lg bg-white/20 py-1.5 text-xs font-bold">{student.rank}</div>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <section className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
+            <div className="mb-6 flex items-center gap-3">
+              <span className="grid h-10 w-10 place-items-center rounded-xl bg-emerald-50 text-emerald-600">
+                <CircleDollarSign size={20} />
+              </span>
+              <h2 className="text-lg font-bold text-slate-900">Fees Collection</h2>
+            </div>
+
+            <div className="space-y-5">
+              {feesData.map((fee) => (
+                <div key={fee.label}>
+                  <div className="mb-2 flex items-center justify-between text-sm">
+                    <span className="font-semibold text-slate-600">{fee.label}</span>
+                    <span className="font-extrabold text-slate-900">{fee.value}%</span>
+                  </div>
+                  <div className="h-2.5 w-full overflow-hidden rounded-full bg-slate-100">
+                    <div
+                      className={`h-full rounded-full ${fee.color}`}
+                      style={{ width: `${fee.value}%` }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        </div>
+      </div>
     </div>
   );
 }

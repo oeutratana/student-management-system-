@@ -1,23 +1,31 @@
-import { useLocation } from 'react-router-dom';
+import { useState } from "react";
+import { useLocation } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Sidebar from "../components/Sidebar";
 
 const MainLayout = ({ children }) => {
   const location = useLocation();
-  
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
   const getPageName = () => {
     const path = location.pathname;
     const pathMap = {
       '/': 'Dashboard',
       '/dashboard': 'Dashboard',
+      '/users': 'Users',
       '/students': 'Students',
-      '/add-student': 'AddStudent',
-      '/attendance': 'Attendance',
-      '/mark-attendance': 'Attendance',
-      '/scores': 'Scores',
-      '/class': 'Class',
       '/teachers': 'Teachers',
-      '/add-teacher': 'AddTeacher',
+      '/parents': 'Parents',
+      '/departments': 'Departments',
+      '/classes': 'Classes',
+      '/courses': 'Courses',
+      '/enrollments': 'Enrollments',
+      '/grades': 'Grades',
+      '/attendances': 'Attendances',
+      '/exams': 'Exams',
+      '/fees': 'Fees',
+      '/payments': 'Payments',
+      '/announcements': 'Announcements',
       '/reports': 'Reports',
       '/settings': 'Settings',
       '/login': 'Login',
@@ -25,16 +33,22 @@ const MainLayout = ({ children }) => {
     return pathMap[path] || 'Dashboard';
   };
 
+  const activePage = getPageName();
+
   return (
-    <div className="flex min-h-screen bg-[#f5f6fa]">
-      <Sidebar activePage={getPageName()} />
+    <div className="app-shell">
+      {sidebarOpen && (
+        <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} />
+      )}
+      <Sidebar
+        activePage={activePage}
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+      />
 
-      <main className="flex-1 flex flex-col min-h-screen">
-        <Navbar activePage={getPageName()} />
-
-        <section className="flex-1 p-5 md:p-6">
-          {children}
-        </section>
+      <main className="main-panel">
+        <Navbar activePage={activePage} onMenuClick={() => setSidebarOpen(true)} />
+        <section className="page-content">{children}</section>
       </main>
     </div>
   );
