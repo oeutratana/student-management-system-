@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { useNavigate } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import { CheckCircle2, GraduationCap, Lock, Mail } from "lucide-react"
 import { useAuth } from "../context/AuthContext"
 
@@ -104,7 +104,9 @@ const Login = () => {
             {loading ? "Signing in..." : "Sign in"}
           </button>
 
-          <p className="form-note">Use your school administrator account to continue.</p>
+          <p className="form-note">
+            Need an account? <Link to="/register">Register</Link>
+          </p>
         </form>
       </section>
     </main>

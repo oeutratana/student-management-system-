@@ -27,6 +27,7 @@ const MainLayout = ({ children }) => {
       '/payments': 'Payments',
       '/announcements': 'Announcements',
       '/reports': 'Reports',
+      '/api-explorer': 'API Explorer',
       '/settings': 'Settings',
       '/login': 'Login',
     };

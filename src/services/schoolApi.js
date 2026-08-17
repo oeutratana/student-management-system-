@@ -1,4 +1,4 @@
-import { apiRequest, resourceApi } from "./apiClient"
+import { apiRequest, listAll, resourceApi } from "./apiClient"
 
 export const authApi = {
   login: (credentials) => apiRequest("/login", { method: "POST", body: JSON.stringify(credentials) }),
@@ -9,6 +9,21 @@ export const authApi = {
 
 export const dashboardApi = {
   index: () => apiRequest("/dashboard"),
+}
+
+export const reportsApi = {
+  list: () => listAll("/reports"),
+}
+
+export const studentPortalApi = {
+  class: () => apiRequest("/student/class"),
+  courses: () => listAll("/student/courses"),
+  exams: () => listAll("/student/exams"),
+  grades: () => listAll("/student/grades"),
+  attendance: () => listAll("/student/attendance"),
+  fees: () => listAll("/student/fees"),
+  payments: () => listAll("/student/payments"),
+  announcements: () => listAll("/student/announcements"),
 }
 
 export const usersApi = resourceApi("users")

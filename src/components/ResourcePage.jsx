@@ -1,5 +1,14 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
-import { Inbox, Pencil, Plus, RefreshCw, Search, Trash2, X } from "lucide-react"
+import {
+  Database,
+  Inbox,
+  Pencil,
+  Plus,
+  RefreshCw,
+  Search,
+  Trash2,
+  X,
+} from "lucide-react"
 
 const emptyValue = (field) => field.defaultValue ?? ""
 
@@ -16,10 +25,45 @@ const formatValue = (item, column) => {
   return value === undefined || value === null || value === "" ? "-" : value
 }
 
+const FieldControl = ({ field, form, onChange }) => {
+  const shared = {
+    name: field.name,
+    value: form[field.name],
+    onChange,
+  }
+
+  if (field.type === "select") {
+    return (
+      <select {...shared} required={field.required}>
+        <option value="">Select {field.label}</option>
+        {(field.options || []).map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+    )
+  }
+
+  if (field.type === "textarea") {
+    return <textarea {...shared} rows={3} />
+  }
+
+  return (
+    <input
+      {...shared}
+      required={field.required}
+      type={field.type || "text"}
+      placeholder={`Enter ${field.label.toLowerCase()}`}
+    />
+  )
+}
+
 export default function ResourcePage({ title, description, api, fields, columns, searchKeys = [] }) {
   const [items, setItems] = useState([])
   const [form, setForm] = useState(buildInitialForm(fields))
   const [editing, setEditing] = useState(null)
+  const [formOpen, setFormOpen] = useState(false)
   const [search, setSearch] = useState("")
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -60,6 +104,12 @@ export default function ResourcePage({ title, description, api, fields, columns,
     loadOptions()
   }, [loadItems, loadOptions])
 
+  const resetForm = useCallback(() => {
+    setForm(buildInitialForm(fields))
+    setEditing(null)
+    setError("")
+  }, [fields])
+
   const filteredItems = useMemo(() => {
     if (!search) {
       return items
@@ -74,9 +124,9 @@ export default function ResourcePage({ title, description, api, fields, columns,
     setForm((current) => ({ ...current, [event.target.name]: event.target.value }))
   }
 
-  const resetForm = () => {
-    setForm(buildInitialForm(fields))
-    setEditing(null)
+  const openAdd = () => {
+    resetForm()
+    setFormOpen(true)
   }
 
   const handleEdit = (item) => {
@@ -87,6 +137,14 @@ export default function ResourcePage({ title, description, api, fields, columns,
 
     setEditing(item)
     setForm(nextForm)
+    setError("")
+    setFormOpen(true)
+    window.scrollTo({ top: 0, behavior: "smooth" })
+  }
+
+  const closeForm = () => {
+    setFormOpen(false)
+    resetForm()
   }
 
   const handleSubmit = async (event) => {
@@ -108,7 +166,7 @@ export default function ResourcePage({ title, description, api, fields, columns,
       } else {
         await api.create(payload)
       }
-      resetForm()
+      closeForm()
       await loadItems()
     } catch (err) {
       setError(err.message)
@@ -131,131 +189,243 @@ export default function ResourcePage({ title, description, api, fields, columns,
     }
   }
 
+  const entity = title.slice(0, -1)
+  const allFields = fields.map((field) => ({ ...field, options: field.options || options[field.name] || [] }))
+
   return (
-    <div className="resource-page">
-      <div className="resource-header">
-        <div>
-          <p className="eyebrow">API Resource</p>
-          <h1>{title}</h1>
-          <p>{description}</p>
+    <div className="flex flex-col gap-6">
+      {/* Header */}
+      <div className="flex flex-col gap-5 rounded-3xl border border-slate-200/80 bg-white p-6 shadow-[0_1px_2px_rgba(16,24,40,0.04),0_12px_40px_-28px_rgba(16,24,40,0.25)] lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex items-start gap-4">
+          <span className="grid h-12 w-12 flex-none place-items-center rounded-2xl bg-gradient-to-br from-indigo-600 to-violet-600 text-white shadow-lg shadow-indigo-600/25">
+            <Database size={22} />
+          </span>
+          <div>
+            <p className="text-[11px] font-extrabold uppercase tracking-[0.16em] text-indigo-500">
+              Records
+            </p>
+            <h1 className="mt-0.5 text-2xl font-extrabold tracking-tight text-slate-900">
+              {title}
+            </h1>
+            <p className="mt-1 text-sm text-slate-500">{description}</p>
+          </div>
         </div>
-        <button className="secondary-button icon-button" onClick={loadItems} type="button">
-          <RefreshCw size={18} />
-          Refresh
-        </button>
+
+        <div className="flex items-center gap-3">
+          <div className="hidden items-center gap-2 rounded-xl bg-slate-100 px-4 py-2.5 sm:flex">
+            <span className="h-2 w-2 rounded-full bg-emerald-500" />
+            <span className="text-sm font-bold text-slate-700">
+              {items.length} {items.length === 1 ? "record" : "records"}
+            </span>
+          </div>
+          <button
+            className="inline-flex items-center gap-2 rounded-xl bg-slate-100 px-4 py-2.5 text-sm font-bold text-slate-700 transition-colors hover:bg-slate-200"
+            onClick={loadItems}
+            type="button"
+          >
+            <RefreshCw size={16} />
+            Refresh
+          </button>
+          {!formOpen && (
+            <button
+              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-indigo-600/30 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-indigo-600/35"
+              onClick={openAdd}
+              type="button"
+            >
+              <Plus size={18} />
+              Add {entity}
+            </button>
+          )}
+        </div>
       </div>
 
-      {error && <div className="alert">{error}</div>}
+      {error && !formOpen && <div className="alert">{error}</div>}
 
-      <div className="resource-grid">
-        <section className="panel">
-          <div className="section-title">
-            <h2>{editing ? `Edit ${title.slice(0, -1)}` : `Add ${title.slice(0, -1)}`}</h2>
-            {editing && (
-              <button className="ghost-button" onClick={resetForm} type="button">
-                <X size={16} />
+      {/* Inline form */}
+      {formOpen && (
+        <section className="form-panel overflow-hidden rounded-3xl border border-indigo-200/70 bg-white shadow-[0_1px_2px_rgba(16,24,40,0.04),0_16px_44px_-28px_rgba(79,70,229,0.4)]">
+          <div className="flex items-center justify-between gap-4 border-b border-slate-100 px-6 py-5">
+            <div className="flex items-center gap-3">
+              <span className="grid h-11 w-11 place-items-center rounded-xl bg-gradient-to-br from-indigo-600 to-violet-600 text-white shadow-md shadow-indigo-600/25">
+                {editing ? <Pencil size={19} /> : <Plus size={19} />}
+              </span>
+              <div>
+                <h2 className="text-lg font-extrabold tracking-tight text-slate-900">
+                  {editing ? `Edit ${entity}` : `Add New ${entity}`}
+                </h2>
+                <p className="text-sm text-slate-500">
+                  {editing ? "Update the record details below." : `Fill in the details to create a ${entity.toLowerCase()}.`}
+                </p>
+              </div>
+            </div>
+            <button
+              className="rounded-xl p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
+              onClick={closeForm}
+              title="Close"
+              type="button"
+            >
+              <X size={20} />
+            </button>
+          </div>
+
+          <form onSubmit={handleSubmit}>
+            <div className="px-6 py-6">
+              {error && (
+                <div className="mb-5 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
+                  {error}
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                {allFields.map((field) => (
+                  <label
+                    className={`grid gap-2 ${field.type === "textarea" ? "sm:col-span-2" : ""}`}
+                    key={field.name}
+                  >
+                    <span className="text-[13px] font-bold text-slate-600">
+                      {field.label}
+                      {field.required && <span className="text-rose-500"> *</span>}
+                    </span>
+                    <FieldControl field={field} form={form} onChange={handleChange} />
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 border-t border-slate-100 bg-slate-50/70 px-6 py-4">
+              <button
+                className="rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-bold text-slate-700 transition-colors hover:bg-slate-100"
+                onClick={closeForm}
+                type="button"
+              >
                 Cancel
+              </button>
+              <button
+                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 px-6 py-2.5 text-sm font-bold text-white shadow-lg shadow-indigo-600/30 transition-all hover:-translate-y-0.5 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60"
+                disabled={saving}
+                type="submit"
+              >
+                {saving ? (
+                  <>
+                    <RefreshCw className="animate-spin" size={16} />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    {editing ? <Pencil size={16} /> : <Plus size={16} />}
+                    {editing ? "Save Changes" : `Create ${entity}`}
+                  </>
+                )}
+              </button>
+            </div>
+          </form>
+        </section>
+      )}
+
+      {/* Table */}
+      <section className="overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
+        <div className="flex flex-col gap-4 border-b border-slate-100 p-6 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="text-lg font-extrabold text-slate-900">{title} List</h2>
+            <p className="mt-0.5 text-sm text-slate-500">
+              {loading
+                ? "Loading records..."
+                : `Showing ${filteredItems.length} of ${items.length} records`}
+            </p>
+          </div>
+          <div className="relative w-full sm:w-72">
+            <Search className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+            <input
+              aria-label={`Search ${title}`}
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-10 pr-9 text-sm font-semibold text-slate-700 outline-none transition-all placeholder:text-slate-400 focus:border-indigo-400 focus:bg-white focus:ring-4 focus:ring-indigo-500/10"
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder={`Search ${title.toLowerCase()}...`}
+              value={search}
+            />
+            {search && (
+              <button
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-md p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
+                onClick={() => setSearch("")}
+                type="button"
+              >
+                <X size={14} />
               </button>
             )}
           </div>
+        </div>
 
-          <form className="api-form" onSubmit={handleSubmit}>
-            {fields.map((field) => (
-              <label key={field.name}>
-                {field.label}
-                {field.type === "select" ? (
-                  <select name={field.name} onChange={handleChange} required={field.required} value={form[field.name]}>
-                    <option value="">Select {field.label}</option>
-                    {(field.options || options[field.name] || []).map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                ) : field.type === "textarea" ? (
-                  <textarea name={field.name} onChange={handleChange} value={form[field.name]} />
-                ) : (
-                  <input
-                    name={field.name}
-                    onChange={handleChange}
-                    required={field.required && !(editing && field.type === "password")}
-                    type={field.type || "text"}
-                    value={form[field.name]}
-                  />
-                )}
-              </label>
-            ))}
-            <button className="primary-button icon-button" disabled={saving} type="submit">
-              <Plus size={18} />
-              {saving ? "Saving..." : editing ? "Save Changes" : `Create ${title.slice(0, -1)}`}
-            </button>
-          </form>
-        </section>
-
-        <section className="panel table-panel">
-          <div className="section-title">
-            <h2>{title} List</h2>
-            <div className="section-title__search">
-              <Search size={16} />
-              <input
-                aria-label={`Search ${title}`}
-                onChange={(event) => setSearch(event.target.value)}
-                placeholder={`Search ${title.toLowerCase()}...`}
-                value={search}
-              />
-            </div>
-          </div>
-
-          <div className="table-wrap">
-            <table>
-              <thead>
+        <div className="overflow-x-auto">
+          <table>
+            <thead>
+              <tr>
+                {columns.map((column) => (
+                  <th key={column.key}>{column.label}</th>
+                ))}
+                <th className="text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? (
                 <tr>
-                  {columns.map((column) => (
-                    <th key={column.key}>{column.label}</th>
-                  ))}
-                  <th>Actions</th>
+                  <td colSpan={columns.length + 1}>
+                    <div className="grid place-items-center gap-3 py-20">
+                      <span className="loader" />
+                      <p className="text-sm font-semibold text-slate-400">Loading records...</p>
+                    </div>
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {loading ? (
-                  <tr>
-                    <td colSpan={columns.length + 1}>
-                      <div className="empty-state">Loading...</div>
-                    </td>
-                  </tr>
-                ) : filteredItems.length ? (
-                  filteredItems.map((item) => (
-                    <tr key={item.id}>
-                      {columns.map((column) => (
-                        <td key={column.key}>{formatValue(item, column)}</td>
-                      ))}
-                      <td>
-                        <div className="action-row">
-                          <button className="icon-only" onClick={() => handleEdit(item)} title="Edit" type="button">
-                            <Pencil size={16} />
-                          </button>
-                          <button className="icon-only danger" onClick={() => handleDelete(item)} title="Delete" type="button">
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={columns.length + 1}>
-                      <div className="empty-state">
-                        <Inbox size={32} />
-                        No records found.
+              ) : filteredItems.length ? (
+                filteredItems.map((item) => (
+                  <tr key={item.id}>
+                    {columns.map((column) => (
+                      <td key={column.key}>{formatValue(item, column)}</td>
+                    ))}
+                    <td>
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          className="icon-only"
+                          onClick={() => handleEdit(item)}
+                          title="Edit"
+                          type="button"
+                        >
+                          <Pencil size={16} />
+                        </button>
+                        <button
+                          className="icon-only danger"
+                          onClick={() => handleDelete(item)}
+                          title="Delete"
+                          type="button"
+                        >
+                          <Trash2 size={16} />
+                        </button>
                       </div>
                     </td>
                   </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </section>
-      </div>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={columns.length + 1}>
+                    <div className="grid place-items-center gap-3 py-20 text-slate-400">
+                      <span className="grid h-16 w-16 place-items-center rounded-2xl bg-slate-50">
+                        <Inbox size={30} />
+                      </span>
+                      <p className="font-bold">No {title.toLowerCase()} found</p>
+                      <button
+                        className="inline-flex items-center gap-2 rounded-xl bg-indigo-50 px-4 py-2 text-sm font-bold text-indigo-600 transition-colors hover:bg-indigo-100"
+                        onClick={openAdd}
+                        type="button"
+                      >
+                        <Plus size={16} />
+                        Add your first {entity.toLowerCase()}
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </section>
     </div>
   )
 }

@@ -10,12 +10,66 @@ const parseResponse = async (response) => {
   const text = await response.text()
   const data = text ? JSON.parse(text) : null
 
+  if (response.status === 401) {
+    localStorage.removeItem("auth_token")
+    localStorage.removeItem("auth_user")
+    if (window.location.pathname !== "/login") {
+      window.location.assign("/login")
+    }
+  }
+
   if (!response.ok) {
     const message = data?.message || Object.values(data?.errors || {})?.flat()?.[0] || "API request failed"
-    throw new Error(message)
+    const error = new Error(message)
+    error.status = response.status
+    throw error
   }
 
   return data
+}
+
+const isAbsoluteUrl = (path) => /^https?:\/\//i.test(path)
+
+const toApiPath = (path) => {
+  if (!isAbsoluteUrl(path)) {
+    return path
+  }
+
+  try {
+    const url = new URL(path)
+    return `${url.pathname}${url.search}`
+  } catch {
+    return path
+  }
+}
+
+const extractRows = (payload) => {
+  if (Array.isArray(payload)) {
+    return payload
+  }
+
+  if (Array.isArray(payload?.data)) {
+    return payload.data
+  }
+
+  if (Array.isArray(payload?.data?.data)) {
+    return payload.data.data
+  }
+
+  if (Array.isArray(payload?.items)) {
+    return payload.items
+  }
+
+  if (Array.isArray(payload?.results)) {
+    return payload.results
+  }
+
+  return []
+}
+
+const nextPagePath = (payload) => {
+  const next = payload?.links?.next ?? payload?.next_page_url ?? payload?.data?.next_page_url
+  return next ? toApiPath(next) : null
 }
 
 export const apiRequest = async (path, options = {}) => {
@@ -38,8 +92,22 @@ export const apiRequest = async (path, options = {}) => {
   return parseResponse(response)
 }
 
+export const listAll = async (path) => {
+  const rows = []
+  let next = path
+
+  while (next) {
+    const payload = await apiRequest(next)
+    rows.push(...extractRows(payload))
+    next = nextPagePath(payload)
+  }
+
+  return rows
+}
+
 export const resourceApi = (resource) => ({
-  list: () => apiRequest(`/${resource}`),
+  list: () => listAll(`/${resource}`),
+  show: (id) => apiRequest(`/${resource}/${id}`),
   create: (data) => apiRequest(`/${resource}`, { method: "POST", body: JSON.stringify(data) }),
   update: (id, data) => apiRequest(`/${resource}/${id}`, { method: "PUT", body: JSON.stringify(data) }),
   remove: (id) => apiRequest(`/${resource}/${id}`, { method: "DELETE" }),
