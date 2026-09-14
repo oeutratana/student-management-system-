@@ -317,6 +317,28 @@ textarea {
   color: var(--primary);
 }
 
+.navbar__lang-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--text-soft);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.navbar__lang-btn:hover {
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+
 .navbar__dot {
   position: absolute;
   top: 8px;

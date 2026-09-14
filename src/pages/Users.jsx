@@ -1,28 +1,37 @@
 import ResourcePage from "../components/ResourcePage"
 import { usersApi } from "../services/schoolApi"
+import { useLanguage } from "../context/LanguageContext"
 
 export default function Users() {
+  const { t } = useLanguage()
+
+  const roleLabel = (role) =>
+    role === "admin" ? t("val.admin") : role === "teacher" ? t("lbl.teacher") : t("lbl.student")
+
   return (
     <ResourcePage
       api={usersApi}
+      managePermission="manage_users"
+      singular={t("lbl.user")}
+      title={t("page.users")}
+      description={t("users.desc")}
       columns={[
-        { key: "id", label: "ID" },
-        { key: "name", label: "Name" },
-        { key: "email", label: "Email" },
-        { key: "role", label: "Role", render: (item) => <span className={`badge ${item.role === "admin" ? "badge--blue" : "badge--green"}`}>{item.role}</span> },
+        { key: "id", label: t("lbl.id") },
+        { key: "name", label: t("lbl.name") },
+        { key: "email", label: t("lbl.email") },
+        { key: "role", label: t("lbl.role"), render: (item) => <span className={`badge ${item.role === "admin" ? "badge--blue" : "badge--green"}`}>{roleLabel(item.role)}</span> },
       ]}
-      description="Manage user accounts and assign roles for the system."
       fields={[
-        { name: "name", label: "Name", required: true },
-        { name: "email", label: "Email", type: "email", required: true },
-        { name: "password", label: "Password", type: "password", required: true },
-        { name: "role", label: "Role", type: "select", required: true, options: [
-          { value: "admin", label: "Admin" },
-          { value: "teacher", label: "Teacher" },
+        { name: "name", label: t("lbl.name"), required: true },
+        { name: "email", label: t("lbl.email"), type: "email", required: true },
+        { name: "password", label: t("lbl.password"), type: "password", required: true },
+        { name: "role", label: t("lbl.role"), type: "select", required: true, options: [
+          { value: "admin", label: t("val.admin") },
+          { value: "teacher", label: t("lbl.teacher") },
+          { value: "student", label: t("lbl.student") },
         ] },
       ]}
       searchKeys={["name", "email", "role"]}
-      title="Users"
     />
   )
 }

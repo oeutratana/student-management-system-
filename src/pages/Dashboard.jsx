@@ -17,6 +17,8 @@ import {
   XCircle,
 } from "lucide-react";
 import { announcementsApi, dashboardApi } from "../services/schoolApi";
+import { useAuth } from "../context/AuthContext";
+import { useLanguage } from "../context/LanguageContext";
 
 const chartW = 600;
 const chartH = 210;
@@ -57,11 +59,11 @@ const buildGrowth = (current, steps = 12) => {
   return values;
 };
 
-const monthLabels = (count = 12) => {
+const monthLabels = (count = 12, locale = "en-US") => {
   const now = new Date();
   return Array.from({ length: count }, (_, i) => {
     const date = new Date(now.getFullYear(), now.getMonth() - (count - 1 - i), 1);
-    return date.toLocaleDateString("en-US", { month: "short" });
+    return date.toLocaleDateString(locale, { month: "short" });
   });
 };
 
@@ -73,24 +75,24 @@ const trendOf = (values) => {
 const formatNumber = (value) => Number(value ?? 0).toLocaleString();
 
 const formatDate = (value) => {
-  if (!value) return "Recently";
+  if (!value) return null;
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
   return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 };
 
 const kpiMeta = [
-  { key: "students", title: "Total Students", icon: Users, tint: "bg-indigo-50 text-indigo-600", spark: "#6366f1" },
-  { key: "teachers", title: "Teachers", icon: ClipboardCheck, tint: "bg-amber-50 text-amber-500", spark: "#f59e0b" },
-  { key: "parents", title: "Parents", icon: UserCircle, tint: "bg-emerald-50 text-emerald-600", spark: "#10b981" },
-  { key: "payments", title: "Payments", icon: Wallet, tint: "bg-violet-50 text-violet-600", spark: "#8b5cf6" },
+  { key: "students", titleKey: "dash.totalStudents", icon: Users, tint: "bg-indigo-50 text-indigo-600", spark: "#6366f1" },
+  { key: "teachers", titleKey: "dash.teachers", icon: ClipboardCheck, tint: "bg-amber-50 text-amber-500", spark: "#f59e0b" },
+  { key: "parents", titleKey: "dash.parents", icon: UserCircle, tint: "bg-emerald-50 text-emerald-600", spark: "#10b981" },
+  { key: "payments", titleKey: "dash.payments", icon: Wallet, tint: "bg-violet-50 text-violet-600", spark: "#8b5cf6" },
 ];
 
 const quickActions = [
-  { label: "Add Student", path: "/students", icon: Users, tint: "bg-indigo-50 text-indigo-600" },
-  { label: "Mark Attendance", path: "/attendances", icon: CheckCircle2, tint: "bg-emerald-50 text-emerald-600" },
-  { label: "New Payment", path: "/payments", icon: Wallet, tint: "bg-violet-50 text-violet-600" },
-  { label: "Post Announcement", path: "/announcements", icon: Megaphone, tint: "bg-amber-50 text-amber-500" },
+  { labelKey: "dash.addStudent", path: "/students", icon: Users, tint: "bg-indigo-50 text-indigo-600", permission: "create_students" },
+  { labelKey: "dash.markAttendance", path: "/attendances", icon: CheckCircle2, tint: "bg-emerald-50 text-emerald-600", permission: "manage_attendance" },
+  { labelKey: "dash.newPayment", path: "/payments", icon: Wallet, tint: "bg-violet-50 text-violet-600", permission: "manage_payments" },
+  { labelKey: "dash.postAnnouncement", path: "/announcements", icon: Megaphone, tint: "bg-amber-50 text-amber-500", permission: "manage_announcements" },
 ];
 
 const performers = [
@@ -177,6 +179,7 @@ const GrowthChart = ({ data }) => {
 };
 
 const Donut = ({ percent }) => {
+  const { t } = useLanguage();
   const radius = 58;
   const circumference = 2 * Math.PI * radius;
   const offset = circumference - (percent / 100) * circumference;
@@ -206,7 +209,7 @@ const Donut = ({ percent }) => {
         {percent}%
       </text>
       <text fill="#94a3b8" fontSize="11" fontWeight="600" textAnchor="middle" x="80" y="96">
-        Attendance
+        {t("dash.attendance")}
       </text>
     </svg>
   );
@@ -214,6 +217,11 @@ const Donut = ({ percent }) => {
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { lang, t } = useLanguage();
+  const allowedQuickActions = quickActions.filter(
+    (action) => user?.role === "admin" || (user?.permissions ?? []).includes(action.permission),
+  );
   const [stats, setStats] = useState({});
   const [announcements, setAnnouncements] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -247,14 +255,15 @@ export default function Dashboard() {
   }, []);
 
   const today = new Date();
-  const dateLabel = today.toLocaleDateString("en-US", {
+  const locale = lang === "km" ? "km-KH" : "en-US";
+  const dateLabel = today.toLocaleDateString(locale, {
     weekday: "long",
     day: "numeric",
     month: "long",
     year: "numeric",
   });
   const hour = today.getHours();
-  const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
+  const greeting = hour < 12 ? t("dash.goodMorning") : hour < 18 ? t("dash.goodAfternoon") : t("dash.goodEvening");
 
   const students = Number(stats.students ?? 0);
   const attendanceRate = Math.min(99, Math.max(82, 90 + (Number(stats.attendances ?? 0) % 8)));
@@ -276,28 +285,28 @@ export default function Dashboard() {
   );
 
   const growthData = useMemo(() => buildGrowth(students), [students]);
-  const labels = useMemo(() => monthLabels(12), []);
+  const labels = useMemo(() => monthLabels(12, lang === "km" ? "km-KH" : "en-US"), [lang]);
 
   const weekdayIndex = today.getDay();
   const weekly = [
-    { day: "Mon", value: 88 },
-    { day: "Tue", value: 94 },
-    { day: "Wed", value: 90 },
-    { day: "Thu", value: 97 },
-    { day: "Fri", value: 86 },
+    { dayKey: "dash.mon", value: 88 },
+    { dayKey: "dash.tue", value: 94 },
+    { dayKey: "dash.wed", value: 90 },
+    { dayKey: "dash.thu", value: 97 },
+    { dayKey: "dash.fri", value: 86 },
   ];
   const activeWeekday = weekdayIndex >= 1 && weekdayIndex <= 5 ? weekdayIndex - 1 : 4;
 
   const feeCategories = [
-    { label: "Tuition", value: Math.min(100, feeRate + 9), color: "bg-indigo-500" },
-    { label: "Library", value: Math.min(100, Math.max(feeRate - 6, 4)), color: "bg-amber-400" },
-    { label: "Activities", value: Math.min(100, feeRate + 3), color: "bg-emerald-500" },
+    { label: t("dash.tuition"), value: Math.min(100, feeRate + 9), color: "bg-indigo-500" },
+    { label: t("dash.library"), value: Math.min(100, Math.max(feeRate - 6, 4)), color: "bg-amber-400" },
+    { label: t("dash.activities"), value: Math.min(100, feeRate + 3), color: "bg-emerald-500" },
   ];
 
   const heroChips = [
-    { label: "Enrolled Students", value: formatNumber(students), icon: Users },
-    { label: "Classes", value: formatNumber(stats.classes), icon: School },
-    { label: "Attendance Rate", value: `${attendanceRate}%`, icon: CalendarDays },
+    { label: t("dash.enrolledStudents"), value: formatNumber(students), icon: Users },
+    { label: t("dash.classes"), value: formatNumber(stats.classes), icon: School },
+    { label: t("dash.attendanceRate"), value: `${attendanceRate}%`, icon: CalendarDays },
   ];
 
   const viewAll = (to) => (
@@ -306,7 +315,7 @@ export default function Dashboard() {
       onClick={() => navigate(to)}
       type="button"
     >
-      View All
+      {t("dash.viewAll")}
       <ArrowUpRight size={15} />
     </button>
   );
@@ -336,11 +345,10 @@ export default function Dashboard() {
           <div className="max-w-xl">
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-indigo-300">{dateLabel}</p>
             <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-white lg:text-4xl">
-              {greeting}, Admin 👋
+              {t("dash.greeting", { greeting, name: user?.name || t("dash.there") })}
             </h1>
             <p className="mt-3 text-sm leading-7 text-indigo-100/80 lg:text-base">
-              Welcome back to Technology School. Review student growth, track attendance and keep the
-              school running smoothly from one place.
+              {t("dash.heroText")}
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
               <button
@@ -349,14 +357,14 @@ export default function Dashboard() {
                 type="button"
               >
                 <Megaphone size={16} />
-                New Announcement
+                {t("dash.newAnnouncement")}
               </button>
               <button
                 className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-5 py-2.5 text-sm font-bold text-white backdrop-blur transition-colors hover:bg-white/20"
                 type="button"
               >
                 <Download size={16} />
-                Export Report
+                {t("dash.exportReport")}
               </button>
             </div>
           </div>
@@ -397,7 +405,7 @@ export default function Dashboard() {
                   {trend}
                 </span>
               </div>
-              <p className="mt-4 text-sm font-semibold text-slate-500">{stat.title}</p>
+              <p className="mt-4 text-sm font-semibold text-slate-500">{t(stat.titleKey)}</p>
               <div className="mt-1 flex items-end justify-between gap-3">
                 <p className="text-3xl font-extrabold tracking-tight text-slate-900">
                   {loading ? "…" : formatNumber(stats[stat.key])}
@@ -417,9 +425,9 @@ export default function Dashboard() {
             {sectionTitle(
               <TrendingUp size={20} />,
               "bg-indigo-50 text-indigo-600",
-              "Student Growth",
+              t("dash.studentGrowth"),
               <span className="rounded-full bg-indigo-50 px-3 py-1.5 text-xs font-bold text-indigo-600">
-                Last 12 months
+                {t("dash.last12Months")}
               </span>,
             )}
             <GrowthChart data={growthData} />
@@ -441,7 +449,7 @@ export default function Dashboard() {
             {sectionTitle(
               <CalendarDays size={20} />,
               "bg-emerald-50 text-emerald-600",
-              "Attendance Overview",
+              t("dash.attendanceOverview"),
               viewAll("/attendances"),
             )}
             <div className="flex flex-col gap-8 lg:flex-row lg:items-center">
@@ -450,11 +458,11 @@ export default function Dashboard() {
                 <div className="flex items-center gap-4 text-xs font-semibold">
                   <span className="inline-flex items-center gap-1.5 text-slate-600">
                     <span className="h-2.5 w-2.5 rounded-full bg-indigo-500" />
-                    Present
+                    {t("dash.present")}
                   </span>
                   <span className="inline-flex items-center gap-1.5 text-slate-400">
                     <span className="h-2.5 w-2.5 rounded-full bg-slate-200" />
-                    Absent
+                    {t("dash.absent")}
                   </span>
                 </div>
               </div>
@@ -464,7 +472,7 @@ export default function Dashboard() {
                   <div className="rounded-xl bg-emerald-50 p-4">
                     <p className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-600">
                       <CheckCircle2 size={14} />
-                      Present
+                      {t("dash.present")}
                     </p>
                     <p className="mt-1 text-2xl font-extrabold text-slate-900">
                       {loading ? "…" : formatNumber(presentCount)}
@@ -473,7 +481,7 @@ export default function Dashboard() {
                   <div className="rounded-xl bg-rose-50 p-4">
                     <p className="inline-flex items-center gap-1.5 text-xs font-bold text-rose-500">
                       <XCircle size={14} />
-                      Absent
+                      {t("dash.absent")}
                     </p>
                     <p className="mt-1 text-2xl font-extrabold text-slate-900">
                       {loading ? "…" : formatNumber(absentCount)}
@@ -483,11 +491,13 @@ export default function Dashboard() {
 
                 <div>
                   <p className="mb-3 text-xs font-bold uppercase tracking-wide text-slate-400">
-                    This week
+                    {t("dash.thisWeek")}
                   </p>
                   <div className="flex h-28 items-end justify-between gap-2">
-                    {weekly.map((day, index) => (
-                      <div className="flex h-full flex-1 flex-col items-center justify-end gap-2" key={day.day}>
+                    {weekly.map((day, index) => {
+                      const dayLabel = t(day.dayKey)
+                      return (
+                        <div className="flex h-full flex-1 flex-col items-center justify-end gap-2" key={day.dayKey}>
                         <div
                           className={`w-full rounded-t-lg transition-colors ${
                             index === activeWeekday
@@ -495,17 +505,18 @@ export default function Dashboard() {
                               : "bg-indigo-100 hover:bg-indigo-200"
                           }`}
                           style={{ height: `${day.value}%` }}
-                          title={`${day.day}: ${day.value}%`}
+                          title={`${dayLabel}: ${day.value}%`}
                         />
                         <span
                           className={`text-[11px] font-bold ${
                             index === activeWeekday ? "text-indigo-600" : "text-slate-400"
                           }`}
                         >
-                          {day.day}
+                          {dayLabel}
                         </span>
                       </div>
-                    ))}
+                      )
+                    })}
                   </div>
                 </div>
               </div>
@@ -516,12 +527,12 @@ export default function Dashboard() {
             {sectionTitle(
               <Megaphone size={20} />,
               "bg-amber-50 text-amber-500",
-              "Recent Announcements",
+              t("dash.recentAnnouncements"),
               viewAll("/announcements"),
             )}
             <div className="space-y-4">
               {loading ? (
-                <p className="py-6 text-sm text-slate-400">Loading announcements...</p>
+                <p className="py-6 text-sm text-slate-400">{t("dash.loadingAnnouncements")}</p>
               ) : announcements.length ? (
                 announcements.slice(0, 3).map((item) => (
                   <div
@@ -545,7 +556,7 @@ export default function Dashboard() {
                   </div>
                 ))
               ) : (
-                <p className="py-6 text-sm text-slate-400">No announcements yet.</p>
+                <p className="py-6 text-sm text-slate-400">{t("dash.noAnnouncements")}</p>
               )}
             </div>
           </section>
@@ -556,16 +567,17 @@ export default function Dashboard() {
             {sectionTitle(
               <School size={20} />,
               "bg-violet-50 text-violet-600",
-              "Quick Actions",
+              t("dash.quickActions"),
               null,
             )}
             <div className="grid grid-cols-2 gap-3">
-              {quickActions.map((action) => {
+              {allowedQuickActions.map((action) => {
                 const Icon = action.icon;
+                const actionLabel = t(action.labelKey);
                 return (
                   <button
                     className="group flex flex-col items-start gap-3 rounded-xl border border-slate-200 bg-white p-4 text-left transition-all hover:-translate-y-0.5 hover:border-indigo-300 hover:shadow-md"
-                    key={action.label}
+                    key={action.labelKey}
                     onClick={() => navigate(action.path)}
                     type="button"
                   >
@@ -573,7 +585,7 @@ export default function Dashboard() {
                       <Icon size={19} />
                     </span>
                     <span className="flex items-center gap-1 text-sm font-bold text-slate-700 transition-colors group-hover:text-indigo-600">
-                      {action.label}
+                      {actionLabel}
                       <ArrowUpRight size={14} className="opacity-0 transition-opacity group-hover:opacity-100" />
                     </span>
                   </button>
@@ -586,25 +598,25 @@ export default function Dashboard() {
             {sectionTitle(
               <CircleDollarSign size={20} />,
               "bg-emerald-50 text-emerald-600",
-              "Fees Collection",
+              t("dash.feesCollection"),
               viewAll("/fees"),
             )}
             <div className="flex items-center gap-5">
               <div className="rounded-2xl bg-gradient-to-br from-indigo-600 to-violet-600 p-4 text-white shadow-lg shadow-indigo-600/25">
                 <p className="text-[11px] font-bold uppercase tracking-wide text-indigo-200">
-                  Collection Rate
+                  {t("dash.collectionRate")}
                 </p>
                 <p className="mt-1 text-3xl font-extrabold">{loading ? "…" : `${feeRate}%`}</p>
               </div>
               <div className="space-y-1.5 text-sm">
                 <p className="text-slate-500">
-                  Total fees{" "}
+                  {t("dash.totalFees")}{" "}
                   <strong className="ml-1 font-extrabold text-slate-900">
                     {formatNumber(stats.fees)}
                   </strong>
                 </p>
                 <p className="text-slate-500">
-                  Payments{" "}
+                  {t("dash.paymentsShort")}{" "}
                   <strong className="ml-1 font-extrabold text-slate-900">
                     {formatNumber(stats.payments)}
                   </strong>
@@ -627,7 +639,7 @@ export default function Dashboard() {
           </section>
 
           <section className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
-            {sectionTitle(<Trophy size={20} />, "bg-amber-50 text-amber-500", "Top Performers", null)}
+            {sectionTitle(<Trophy size={20} />, "bg-amber-50 text-amber-500", t("dash.topPerformers"), null)}
             <div className="space-y-3">
               {performers.map((student) => (
                 <div
@@ -641,7 +653,7 @@ export default function Dashboard() {
                   </span>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-bold text-slate-900">{student.name}</p>
-                    <p className="text-xs font-semibold text-slate-400">Rank #{student.rank}</p>
+                    <p className="text-xs font-semibold text-slate-400">{t("dash.rank", { rank: student.rank })}</p>
                   </div>
                   <span className="text-sm font-extrabold text-slate-900">{student.score}%</span>
                 </div>

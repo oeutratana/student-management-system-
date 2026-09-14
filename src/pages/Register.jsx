@@ -2,9 +2,11 @@ import { useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { CheckCircle2, GraduationCap, Lock, Mail, UserRound } from "lucide-react"
 import { authApi } from "../services/schoolApi"
+import { useLanguage } from "../context/LanguageContext"
 
 const Register = () => {
   const navigate = useNavigate()
+  const { t } = useLanguage()
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -24,7 +26,7 @@ const Register = () => {
     setError("")
 
     if (form.password !== form.password_confirmation) {
-      setError("Passwords do not match")
+      setError(t("auth.passwordMismatch"))
       return
     }
 
@@ -46,47 +48,44 @@ const Register = () => {
           <span className="login-brand__logo">
             <GraduationCap size={24} />
           </span>
-          Technology School
+          {t("brand.name")}
         </div>
 
         <div className="login-brand__body">
-          <h2>Create your school workspace first.</h2>
-          <p>
-            Register an administrator account, then sign in to manage students,
-            teachers, classes, attendance and payments.
-          </p>
+          <h2>{t("auth.hero2")}</h2>
+          <p>{t("auth.hero2Text")}</p>
 
           <div className="login-brand__points">
             <span className="login-brand__point">
               <CheckCircle2 size={18} />
-              Start with a secure administrator profile
+              {t("auth.p4")}
             </span>
             <span className="login-brand__point">
               <CheckCircle2 size={18} />
-              Connect staff, students and class records
+              {t("auth.p5")}
             </span>
             <span className="login-brand__point">
               <CheckCircle2 size={18} />
-              Sign in after registration to open the dashboard
+              {t("auth.p6")}
             </span>
           </div>
         </div>
 
         <p className="login-brand__bottom">
-          © {new Date().getFullYear()} Technology School. Admin tools for school operations.
+          {t("auth.footer", { year: new Date().getFullYear() })}
         </p>
       </section>
 
       <section className="login-panel">
         <form className="login-form" onSubmit={handleSubmit}>
           <div className="login-form__title">
-            <h1>Register</h1>
-            <p className="login-form__subtitle">Create your administrator account first.</p>
+            <h1>{t("auth.registerTitle")}</h1>
+            <p className="login-form__subtitle">{t("auth.registerSub")}</p>
           </div>
 
           {error && <div className="alert">{error}</div>}
 
-          <label htmlFor="name">Name</label>
+          <label htmlFor="name">{t("lbl.name")}</label>
           <div className="login-form__field">
             <UserRound size={16} />
             <input
@@ -101,7 +100,7 @@ const Register = () => {
             />
           </div>
 
-          <label htmlFor="email">Email</label>
+          <label htmlFor="email">{t("lbl.email")}</label>
           <div className="login-form__field">
             <Mail size={16} />
             <input
@@ -116,7 +115,7 @@ const Register = () => {
             />
           </div>
 
-          <label htmlFor="password">Password</label>
+          <label htmlFor="password">{t("lbl.password")}</label>
           <div className="login-form__field">
             <Lock size={16} />
             <input
@@ -124,14 +123,14 @@ const Register = () => {
               id="password"
               name="password"
               onChange={handleChange}
-              placeholder="Password"
+              placeholder={t("lbl.password")}
               required
               type="password"
               value={form.password}
             />
           </div>
 
-          <label htmlFor="password_confirmation">Confirm Password</label>
+          <label htmlFor="password_confirmation">{t("lbl.confirmPassword")}</label>
           <div className="login-form__field">
             <Lock size={16} />
             <input
@@ -139,7 +138,7 @@ const Register = () => {
               id="password_confirmation"
               name="password_confirmation"
               onChange={handleChange}
-              placeholder="Confirm password"
+              placeholder={t("lbl.confirmPassword")}
               required
               type="password"
               value={form.password_confirmation}
@@ -147,11 +146,11 @@ const Register = () => {
           </div>
 
           <button disabled={loading} type="submit">
-            {loading ? "Creating account..." : "Register"}
+            {loading ? t("auth.creating") : t("auth.register")}
           </button>
 
           <p className="form-note">
-            Already registered? <Link to="/login">Login</Link>
+            {t("auth.already")} <Link to="/login">{t("auth.login")}</Link>
           </p>
         </form>
       </section>

@@ -2,10 +2,12 @@ import { useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { CheckCircle2, GraduationCap, Lock, Mail } from "lucide-react"
 import { useAuth } from "../context/AuthContext"
+import { useLanguage } from "../context/LanguageContext"
 
 const Login = () => {
   const navigate = useNavigate()
   const { login } = useAuth()
+  const { t } = useLanguage()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
@@ -32,47 +34,44 @@ const Login = () => {
           <span className="login-brand__logo">
             <GraduationCap size={24} />
           </span>
-          Technology School
+          {t("brand.name")}
         </div>
 
         <div className="login-brand__body">
-          <h2>Run your school smoothly, all in one place.</h2>
-          <p>
-            Manage students, teachers, classes, attendance and fees from a single
-            modern dashboard built for school administrators.
-          </p>
+          <h2>{t("auth.hero1")}</h2>
+          <p>{t("auth.hero1Text")}</p>
 
           <div className="login-brand__points">
             <span className="login-brand__point">
               <CheckCircle2 size={18} />
-              Real-time attendance and academic tracking
+              {t("auth.p1")}
             </span>
             <span className="login-brand__point">
               <CheckCircle2 size={18} />
-              Fees and payment management made easy
+              {t("auth.p2")}
             </span>
             <span className="login-brand__point">
               <CheckCircle2 size={18} />
-              Secure role-based access for your staff
+              {t("auth.p3")}
             </span>
           </div>
         </div>
 
         <p className="login-brand__bottom">
-          © {new Date().getFullYear()} Technology School. Admin tools for school operations.
+          {t("auth.footer", { year: new Date().getFullYear() })}
         </p>
       </section>
 
       <section className="login-panel">
         <form className="login-form" onSubmit={handleSubmit}>
           <div className="login-form__title">
-            <h1>Welcome back</h1>
-            <p className="login-form__subtitle">Sign in to your administrator account.</p>
+            <h1>{t("auth.welcomeBack")}</h1>
+            <p className="login-form__subtitle">{t("auth.signInSub")}</p>
           </div>
 
           {error && <div className="alert">{error}</div>}
 
-          <label htmlFor="email">Email</label>
+          <label htmlFor="email">{t("lbl.email")}</label>
           <div className="login-form__field">
             <Mail size={16} />
             <input
@@ -86,14 +85,14 @@ const Login = () => {
             />
           </div>
 
-          <label htmlFor="password">Password</label>
+          <label htmlFor="password">{t("lbl.password")}</label>
           <div className="login-form__field">
             <Lock size={16} />
             <input
               autoComplete="current-password"
               id="password"
               onChange={(event) => setPassword(event.target.value)}
-              placeholder="Password"
+              placeholder={t("lbl.password")}
               required
               type="password"
               value={password}
@@ -101,11 +100,11 @@ const Login = () => {
           </div>
 
           <button disabled={loading} type="submit">
-            {loading ? "Signing in..." : "Sign in"}
+            {loading ? t("auth.signingIn") : t("auth.signIn")}
           </button>
 
           <p className="form-note">
-            Need an account? <Link to="/register">Register</Link>
+            {t("auth.needAccount")} <Link to="/register">{t("auth.register")}</Link>
           </p>
         </form>
       </section>

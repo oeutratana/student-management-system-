@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { Bell, ChevronDown, LogOut, Menu, Search, Settings } from "lucide-react"
+import { Bell, ChevronDown, Languages, LogOut, Menu, Search, Settings } from "lucide-react"
 import { useAuth } from "../context/AuthContext"
+import { useLanguage } from "../context/LanguageContext"
 
 const Navbar = ({ activePage, onMenuClick }) => {
   const navigate = useNavigate()
   const { user, logout } = useAuth()
+  const { lang, toggleLang, t } = useLanguage()
   const [profileOpen, setProfileOpen] = useState(false)
   const dropdownRef = useRef(null)
 
@@ -37,7 +39,7 @@ const Navbar = ({ activePage, onMenuClick }) => {
         </button>
 
         <div className="navbar__title">
-          <p>Student Management System</p>
+          <p>{t("nav.title")}</p>
           <h1>{activePage}</h1>
         </div>
       </div>
@@ -45,10 +47,15 @@ const Navbar = ({ activePage, onMenuClick }) => {
       <div className="navbar__right">
         <div className="navbar__search">
           <Search size={16} />
-          <input aria-label="Search" placeholder="Search anything..." type="search" />
+          <input aria-label="Search" placeholder={t("nav.search")} type="search" />
         </div>
 
-        <button className="navbar__icon-btn" title="Notifications" type="button">
+        <button className="navbar__lang-btn" onClick={toggleLang} title={t("nav.language")} type="button">
+          <Languages size={16} />
+          {lang === "en" ? "KH" : "EN"}
+        </button>
+
+        <button className="navbar__icon-btn" title={t("nav.notifications")} type="button">
           <Bell size={18} />
           <span className="navbar__dot" />
         </button>
@@ -82,11 +89,11 @@ const Navbar = ({ activePage, onMenuClick }) => {
               </div>
               <button onClick={() => navigate("/settings")} role="menuitem" type="button">
                 <Settings size={16} />
-                Settings
+                {t("nav.settings")}
               </button>
               <button onClick={handleLogout} role="menuitem" type="button">
                 <LogOut size={16} />
-                Sign out
+                {t("nav.signOut")}
               </button>
             </div>
           )}

@@ -9,6 +9,8 @@ import {
   Trash2,
   X,
 } from "lucide-react"
+import { useAuth } from "../context/AuthContext"
+import { useLanguage } from "../context/LanguageContext"
 
 const emptyValue = (field) => field.defaultValue ?? ""
 
@@ -26,6 +28,7 @@ const formatValue = (item, column) => {
 }
 
 const FieldControl = ({ field, form, onChange }) => {
+  const { t } = useLanguage()
   const shared = {
     name: field.name,
     value: form[field.name],
@@ -35,7 +38,7 @@ const FieldControl = ({ field, form, onChange }) => {
   if (field.type === "select") {
     return (
       <select {...shared} required={field.required}>
-        <option value="">Select {field.label}</option>
+        <option value="">{t("res.select", { label: field.label })}</option>
         {(field.options || []).map((option) => (
           <option key={option.value} value={option.value}>
             {option.label}
@@ -54,12 +57,23 @@ const FieldControl = ({ field, form, onChange }) => {
       {...shared}
       required={field.required}
       type={field.type || "text"}
-      placeholder={`Enter ${field.label.toLowerCase()}`}
+      placeholder={t("res.enter", { label: field.label })}
     />
   )
 }
 
-export default function ResourcePage({ title, description, api, fields, columns, searchKeys = [] }) {
+export default function ResourcePage({ title, description, api, fields, columns, searchKeys = [], managePermission, createPermission, singular }) {
+  const { user } = useAuth()
+  const { t } = useLanguage()
+  const canManage =
+    !managePermission ||
+    user?.role === "admin" ||
+    (user?.permissions ?? []).includes(managePermission)
+  const canCreate =
+    !createPermission
+      ? canManage
+      : user?.role === "admin" || (user?.permissions ?? []).includes(createPermission)
+
   const [items, setItems] = useState([])
   const [form, setForm] = useState(buildInitialForm(fields))
   const [editing, setEditing] = useState(null)
@@ -176,7 +190,7 @@ export default function ResourcePage({ title, description, api, fields, columns,
   }
 
   const handleDelete = async (item) => {
-    if (!window.confirm(`Delete ${title.slice(0, -1).toLowerCase()} #${item.id}?`)) {
+    if (!window.confirm(t("res.deleteConfirm", { entity, id: item.id }))) {
       return
     }
 
@@ -189,7 +203,7 @@ export default function ResourcePage({ title, description, api, fields, columns,
     }
   }
 
-  const entity = title.slice(0, -1)
+  const entity = singular ?? title
   const allFields = fields.map((field) => ({ ...field, options: field.options || options[field.name] || [] }))
 
   return (
@@ -202,7 +216,7 @@ export default function ResourcePage({ title, description, api, fields, columns,
           </span>
           <div>
             <p className="text-[11px] font-extrabold uppercase tracking-[0.16em] text-indigo-500">
-              Records
+              {t("res.records")}
             </p>
             <h1 className="mt-0.5 text-2xl font-extrabold tracking-tight text-slate-900">
               {title}
@@ -215,7 +229,7 @@ export default function ResourcePage({ title, description, api, fields, columns,
           <div className="hidden items-center gap-2 rounded-xl bg-slate-100 px-4 py-2.5 sm:flex">
             <span className="h-2 w-2 rounded-full bg-emerald-500" />
             <span className="text-sm font-bold text-slate-700">
-              {items.length} {items.length === 1 ? "record" : "records"}
+              {items.length} {items.length === 1 ? t("res.recordOne") : t("res.recordMany")}
             </span>
           </div>
           <button
@@ -224,16 +238,16 @@ export default function ResourcePage({ title, description, api, fields, columns,
             type="button"
           >
             <RefreshCw size={16} />
-            Refresh
+            {t("res.refresh")}
           </button>
-          {!formOpen && (
+          {!formOpen && canCreate && (
             <button
               className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-indigo-600/30 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-indigo-600/35"
               onClick={openAdd}
               type="button"
             >
               <Plus size={18} />
-              Add {entity}
+              {t("res.add", { entity })}
             </button>
           )}
         </div>
@@ -251,10 +265,10 @@ export default function ResourcePage({ title, description, api, fields, columns,
               </span>
               <div>
                 <h2 className="text-lg font-extrabold tracking-tight text-slate-900">
-                  {editing ? `Edit ${entity}` : `Add New ${entity}`}
+                  {editing ? t("res.edit", { entity }) : t("res.addNew", { entity })}
                 </h2>
                 <p className="text-sm text-slate-500">
-                  {editing ? "Update the record details below." : `Fill in the details to create a ${entity.toLowerCase()}.`}
+                  {editing ? t("res.updateHint") : t("res.createHint", { entity })}
                 </p>
               </div>
             </div>
@@ -298,7 +312,7 @@ export default function ResourcePage({ title, description, api, fields, columns,
                 onClick={closeForm}
                 type="button"
               >
-                Cancel
+                {t("res.cancel")}
               </button>
               <button
                 className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 px-6 py-2.5 text-sm font-bold text-white shadow-lg shadow-indigo-600/30 transition-all hover:-translate-y-0.5 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60"
@@ -308,12 +322,12 @@ export default function ResourcePage({ title, description, api, fields, columns,
                 {saving ? (
                   <>
                     <RefreshCw className="animate-spin" size={16} />
-                    Saving...
+                    {t("res.saving")}
                   </>
                 ) : (
                   <>
                     {editing ? <Pencil size={16} /> : <Plus size={16} />}
-                    {editing ? "Save Changes" : `Create ${entity}`}
+                    {editing ? t("res.saveChanges") : t("res.create", { entity })}
                   </>
                 )}
               </button>
@@ -326,11 +340,11 @@ export default function ResourcePage({ title, description, api, fields, columns,
       <section className="overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
         <div className="flex flex-col gap-4 border-b border-slate-100 p-6 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 className="text-lg font-extrabold text-slate-900">{title} List</h2>
+            <h2 className="text-lg font-extrabold text-slate-900">{t("res.list", { title })}</h2>
             <p className="mt-0.5 text-sm text-slate-500">
               {loading
-                ? "Loading records..."
-                : `Showing ${filteredItems.length} of ${items.length} records`}
+                ? t("res.loading")
+                : t("res.showing", { x: filteredItems.length, y: items.length })}
             </p>
           </div>
           <div className="relative w-full sm:w-72">
@@ -339,7 +353,7 @@ export default function ResourcePage({ title, description, api, fields, columns,
               aria-label={`Search ${title}`}
               className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-10 pr-9 text-sm font-semibold text-slate-700 outline-none transition-all placeholder:text-slate-400 focus:border-indigo-400 focus:bg-white focus:ring-4 focus:ring-indigo-500/10"
               onChange={(event) => setSearch(event.target.value)}
-              placeholder={`Search ${title.toLowerCase()}...`}
+              placeholder={t("res.search", { title })}
               value={search}
             />
             {search && (
@@ -361,16 +375,16 @@ export default function ResourcePage({ title, description, api, fields, columns,
                 {columns.map((column) => (
                   <th key={column.key}>{column.label}</th>
                 ))}
-                <th className="text-right">Actions</th>
+                {canManage && <th className="text-right">{t("res.actions")}</th>}
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={columns.length + 1}>
+                  <td colSpan={columns.length + (canManage ? 1 : 0)}>
                     <div className="grid place-items-center gap-3 py-20">
                       <span className="loader" />
-                      <p className="text-sm font-semibold text-slate-400">Loading records...</p>
+                      <p className="text-sm font-semibold text-slate-400">{t("res.loading")}</p>
                     </div>
                   </td>
                 </tr>
@@ -380,44 +394,48 @@ export default function ResourcePage({ title, description, api, fields, columns,
                     {columns.map((column) => (
                       <td key={column.key}>{formatValue(item, column)}</td>
                     ))}
-                    <td>
-                      <div className="flex items-center justify-end gap-2">
-                        <button
-                          className="icon-only"
-                          onClick={() => handleEdit(item)}
-                          title="Edit"
-                          type="button"
-                        >
-                          <Pencil size={16} />
-                        </button>
-                        <button
-                          className="icon-only danger"
-                          onClick={() => handleDelete(item)}
-                          title="Delete"
-                          type="button"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      </div>
-                    </td>
+                    {canManage && (
+                      <td>
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            className="icon-only"
+                            onClick={() => handleEdit(item)}
+                            title="Edit"
+                            type="button"
+                          >
+                            <Pencil size={16} />
+                          </button>
+                          <button
+                            className="icon-only danger"
+                            onClick={() => handleDelete(item)}
+                            title="Delete"
+                            type="button"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </td>
+                    )}
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan={columns.length + 1}>
+                  <td colSpan={columns.length + (canManage ? 1 : 0)}>
                     <div className="grid place-items-center gap-3 py-20 text-slate-400">
                       <span className="grid h-16 w-16 place-items-center rounded-2xl bg-slate-50">
                         <Inbox size={30} />
                       </span>
-                      <p className="font-bold">No {title.toLowerCase()} found</p>
-                      <button
-                        className="inline-flex items-center gap-2 rounded-xl bg-indigo-50 px-4 py-2 text-sm font-bold text-indigo-600 transition-colors hover:bg-indigo-100"
-                        onClick={openAdd}
-                        type="button"
-                      >
-                        <Plus size={16} />
-                        Add your first {entity.toLowerCase()}
-                      </button>
+                      <p className="font-bold">{t("res.noFound", { title })}</p>
+                      {canCreate && (
+                        <button
+                          className="inline-flex items-center gap-2 rounded-xl bg-indigo-50 px-4 py-2 text-sm font-bold text-indigo-600 transition-colors hover:bg-indigo-100"
+                          onClick={openAdd}
+                          type="button"
+                        >
+                          <Plus size={16} />
+                          {t("res.addFirst", { entity })}
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>

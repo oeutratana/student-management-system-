@@ -1,6 +1,9 @@
 import { Bell, CalendarClock, Save, School, SlidersHorizontal, Target } from "lucide-react"
+import { useLanguage } from "../context/LanguageContext"
 
 const Settings = () => {
+  const { t } = useLanguage()
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-5 rounded-3xl border border-slate-200/80 bg-white p-6 shadow-[0_1px_2px_rgba(16,24,40,0.04),0_12px_40px_-28px_rgba(16,24,40,0.25)] lg:flex-row lg:items-center lg:justify-between">
@@ -10,11 +13,11 @@ const Settings = () => {
           </span>
           <div>
             <p className="text-[11px] font-extrabold uppercase tracking-[0.16em] text-indigo-500">
-              Preferences
+              {t("settings.eyebrow")}
             </p>
-            <h1 className="mt-0.5 text-2xl font-extrabold tracking-tight text-slate-900">Settings</h1>
+            <h1 className="mt-0.5 text-2xl font-extrabold tracking-tight text-slate-900">{t("settings.title")}</h1>
             <p className="mt-1 text-sm text-slate-500">
-              Update school profile, academic year, and account preferences.
+              {t("settings.desc")}
             </p>
           </div>
         </div>
@@ -23,7 +26,7 @@ const Settings = () => {
           type="button"
         >
           <Save size={18} />
-          Save Changes
+          {t("settings.save")}
         </button>
       </div>
 
@@ -34,28 +37,28 @@ const Settings = () => {
               <School size={20} />
             </span>
             <div>
-              <h2 className="text-lg font-extrabold text-slate-900">School Profile</h2>
-              <p className="text-sm text-slate-500">Basic information about your institution</p>
+              <h2 className="text-lg font-extrabold text-slate-900">{t("settings.schoolProfile")}</h2>
+              <p className="text-sm text-slate-500">{t("settings.schoolProfileHint")}</p>
             </div>
           </div>
 
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
             <label className="grid gap-2">
-              <span className="text-[13px] font-bold text-slate-600">School Name</span>
+              <span className="text-[13px] font-bold text-slate-600">{t("settings.schoolName")}</span>
               <input
                 className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-semibold text-slate-700 outline-none transition-all focus:border-indigo-400 focus:bg-white focus:ring-4 focus:ring-indigo-500/10"
                 defaultValue="Bright Future High School"
               />
             </label>
             <label className="grid gap-2">
-              <span className="text-[13px] font-bold text-slate-600">Academic Year</span>
+              <span className="text-[13px] font-bold text-slate-600">{t("settings.academicYear")}</span>
               <input
                 className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-semibold text-slate-700 outline-none transition-all focus:border-indigo-400 focus:bg-white focus:ring-4 focus:ring-indigo-500/10"
                 defaultValue="2026"
               />
             </label>
             <label className="grid gap-2">
-              <span className="text-[13px] font-bold text-slate-600">Email</span>
+              <span className="text-[13px] font-bold text-slate-600">{t("settings.email")}</span>
               <input
                 className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-semibold text-slate-700 outline-none transition-all focus:border-indigo-400 focus:bg-white focus:ring-4 focus:ring-indigo-500/10"
                 defaultValue="admin@brightfuture.edu"
@@ -63,7 +66,7 @@ const Settings = () => {
               />
             </label>
             <label className="grid gap-2">
-              <span className="text-[13px] font-bold text-slate-600">Phone</span>
+              <span className="text-[13px] font-bold text-slate-600">{t("settings.phone")}</span>
               <input
                 className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-semibold text-slate-700 outline-none transition-all focus:border-indigo-400 focus:bg-white focus:ring-4 focus:ring-indigo-500/10"
                 defaultValue="+855 12 345 678"
@@ -78,8 +81,8 @@ const Settings = () => {
               <SlidersHorizontal size={20} />
             </span>
             <div>
-              <h2 className="text-lg font-extrabold text-slate-900">Preferences</h2>
-              <p className="text-sm text-slate-500">Tune how the system notifies and alerts you</p>
+              <h2 className="text-lg font-extrabold text-slate-900">{t("settings.preferences")}</h2>
+              <p className="text-sm text-slate-500">{t("settings.preferencesHint")}</p>
             </div>
           </div>
 
@@ -90,8 +93,8 @@ const Settings = () => {
                   <Bell size={18} />
                 </span>
                 <span className="grid gap-0.5">
-                  <span className="text-sm font-extrabold text-slate-900">Email Notifications</span>
-                  <span className="text-xs text-slate-500">Send daily summaries to administrators.</span>
+                  <span className="text-sm font-extrabold text-slate-900">{t("settings.emailNotifications")}</span>
+                  <span className="text-xs text-slate-500">{t("settings.emailNotifHint")}</span>
                 </span>
               </span>
               <input className="h-5 w-5 accent-indigo-600" defaultChecked type="checkbox" />
@@ -103,8 +106,8 @@ const Settings = () => {
                   <CalendarClock size={18} />
                 </span>
                 <span className="grid gap-0.5">
-                  <span className="text-sm font-extrabold text-slate-900">Attendance Alerts</span>
-                  <span className="text-xs text-slate-500">Flag repeated absences automatically.</span>
+                  <span className="text-sm font-extrabold text-slate-900">{t("settings.attendanceAlerts")}</span>
+                  <span className="text-xs text-slate-500">{t("settings.attendanceAlertsHint")}</span>
                 </span>
               </span>
               <input className="h-5 w-5 accent-indigo-600" defaultChecked type="checkbox" />
@@ -116,8 +119,8 @@ const Settings = () => {
                   <Target size={18} />
                 </span>
                 <span className="grid gap-0.5">
-                  <span className="text-sm font-extrabold text-slate-900">Score Review</span>
-                  <span className="text-xs text-slate-500">Show students below class target.</span>
+                  <span className="text-sm font-extrabold text-slate-900">{t("settings.scoreReview")}</span>
+                  <span className="text-xs text-slate-500">{t("settings.scoreReviewHint")}</span>
                 </span>
               </span>
               <input className="h-5 w-5 accent-indigo-600" type="checkbox" />
