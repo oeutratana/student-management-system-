@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom"
 import { Bell, ChevronDown, Languages, LogOut, Menu, Search, Settings } from "lucide-react"
 import { useAuth } from "../context/AuthContext"
 import { useLanguage } from "../context/LanguageContext"
+import { storageUrl } from "../services/apiClient"
 
 const Navbar = ({ activePage, onMenuClick }) => {
   const navigate = useNavigate()
@@ -11,9 +12,24 @@ const Navbar = ({ activePage, onMenuClick }) => {
   const [profileOpen, setProfileOpen] = useState(false)
   const dropdownRef = useRef(null)
 
-  const name = user?.name || "Admin"
-  const role = user?.role || "admin"
+  // Both the name and the role come from the one user AuthContext holds, which
+  // is only ever set from an authenticated API response. There is no fallback
+  // account: an absent user must not be shown as "Admin".
+  const name = user?.name || t("auth.unknownUser")
+  const roleKey = user?.role ? `val.${user.role}` : null
+  const role = roleKey ? t(roleKey) : ""
   const initial = name.charAt(0).toUpperCase()
+  const avatarImage = user?.student_profile?.image || user?.teacher_profile?.image || null
+
+  const avatar = (
+    <span className="avatar">
+      {avatarImage ? (
+        <img alt={name} src={storageUrl(avatarImage)} />
+      ) : (
+        initial
+      )}
+    </span>
+  )
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -70,7 +86,7 @@ const Navbar = ({ activePage, onMenuClick }) => {
             onClick={() => setProfileOpen((current) => !current)}
             type="button"
           >
-            <span className="avatar">{initial}</span>
+            {avatar}
             <span className="navbar__profile-meta">
               <span className="navbar__profile-name">{name}</span>
               <span className="navbar__profile-role">{role}</span>
@@ -81,10 +97,10 @@ const Navbar = ({ activePage, onMenuClick }) => {
           {profileOpen && (
             <div className="navbar__dropdown" role="menu">
               <div className="navbar__dropdown-head">
-                <span className="avatar">{initial}</span>
+                {avatar}
                 <span>
                   <strong>{name}</strong>
-                  <small>{user?.email || "admin@example.com"}</small>
+                  <small>{user?.email || ""}</small>
                 </span>
               </div>
               <button onClick={() => navigate("/settings")} role="menuitem" type="button">

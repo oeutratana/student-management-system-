@@ -12,7 +12,6 @@ const Register = () => {
     email: "",
     password: "",
     password_confirmation: "",
-    role: "admin",
   })
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
@@ -25,14 +24,20 @@ const Register = () => {
     event.preventDefault()
     setError("")
 
-    if (form.password !== form.password_confirmation) {
+    // The role is not sent: the server decides it. The first account of a
+    // fresh installation becomes the administrator, any later one a student.
+    const data = {
+      ...Object.fromEntries(new FormData(event.currentTarget)),
+    }
+
+    if (data.password !== data.password_confirmation) {
       setError(t("auth.passwordMismatch"))
       return
     }
 
     setLoading(true)
     try {
-      await authApi.register(form)
+      await authApi.register(data)
       navigate("/login")
     } catch (err) {
       setError(err.message)
